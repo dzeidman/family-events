@@ -1,0 +1,122 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var array<string,array<string,mixed>> $categories
+ * @var int                               $days
+ * @var bool                              $today
+ * @var int                               $max_days
+ * @var Individual|null                   $root
+ * @var array<string,string>              $scope_options
+ * @var Tree                              $tree
+ */
+
+// How many empty "named person" boxes to offer under each event type.
+$blank_slots = 3;
+
+?>
+
+<div class="row mb-3">
+    <label class="col-sm-3 col-form-label" for="days">
+        <?= I18N::translate('Number of days to show') ?>
+    </label>
+    <div class="col-sm-9">
+        <input type="number" class="form-control" name="days" id="days" value="<?= e($days) ?>" min="1" max="<?= e($max_days) ?>">
+        <div class="form-text">
+            <?= I18N::plural('maximum %s day', 'maximum %s days', $max_days, I18N::number($max_days)) ?>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-sm-9 offset-sm-3">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="today" id="today" value="1" <?= $today ? 'checked' : '' ?>>
+            <label class="form-check-label" for="today">
+                <?= I18N::translate('Include today’s events') ?>
+            </label>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <label class="col-sm-3 col-form-label" for="root">
+        <?= I18N::translate('Relative to') ?>
+    </label>
+    <div class="col-sm-9">
+        <?= view('components/select-individual', ['name' => 'root', 'id' => 'root', 'individual' => $root, 'tree' => $tree]) ?>
+        <div class="form-text">
+            <?= I18N::translate('Leave blank to measure relationships from whoever is viewing the page (their linked individual record).') ?>
+        </div>
+    </div>
+</div>
+
+<?php foreach ($categories as $key => $category) : ?>
+    <fieldset class="border rounded p-3 mb-3">
+        <legend class="float-none w-auto px-2 fs-6 fw-bold mb-0">
+            <?= e($category['title']) ?>
+        </legend>
+
+        <div class="row mb-3">
+            <label class="col-sm-3 col-form-label" for="<?= e($key) ?>_scope">
+                <?= I18N::translate('Show events for') ?>
+            </label>
+            <div class="col-sm-9">
+                <?= view('components/select', [
+                    'name'     => $key . '_scope',
+                    'id'       => $key . '_scope',
+                    'selected' => $category['settings']['scope'],
+                    'options'  => $scope_options,
+                ]) ?>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-sm-9 offset-sm-3">
+                <?php if ($key !== 'marr') : ?>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="<?= e($key) ?>_spouses" id="<?= e($key) ?>_spouses" value="1" <?= $category['settings']['spouses'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="<?= e($key) ?>_spouses">
+                            <?= I18N::translate('Also include spouses and partners of these relatives') ?>
+                        </label>
+                    </div>
+                <?php endif ?>
+
+                <?php if ($category['show_living']) : ?>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="<?= e($key) ?>_living" id="<?= e($key) ?>_living" value="1" <?= $category['settings']['living'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="<?= e($key) ?>_living">
+                            <?= e($category['living_label']) ?>
+                        </label>
+                    </div>
+                <?php endif ?>
+            </div>
+        </div>
+
+        <div class="row">
+            <label class="col-sm-3 col-form-label">
+                <?= I18N::translate('Always include these people') ?>
+            </label>
+            <div class="col-sm-9">
+                <?php foreach ($category['named'] as $n => $individual) : ?>
+                    <div class="mb-2">
+                        <?= view('components/select-individual', ['name' => $key . '_named[]', 'id' => $key . '_named_' . $n, 'individual' => $individual, 'tree' => $tree]) ?>
+                    </div>
+                <?php endforeach ?>
+                <?php for ($n = count($category['named']); $n < count($category['named']) + $blank_slots; $n++) : ?>
+                    <div class="mb-2">
+                        <?= view('components/select-individual', ['name' => $key . '_named[]', 'id' => $key . '_named_' . $n, 'individual' => null, 'tree' => $tree]) ?>
+                    </div>
+                <?php endfor ?>
+                <div class="form-text">
+                    <?= I18N::translate('These people are shown whatever the setting above (unless it is “Do not show”). To remove someone, clear their box and save. Save to get more empty boxes.') ?>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+<?php endforeach ?>

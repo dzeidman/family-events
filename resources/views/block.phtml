@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Date\GregorianDate;
+use Fisharebest\Webtrees\Fact;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+
+/**
+ * @var array<int,array{fact:Fact,relationship:string,days_away:int}> $rows
+ */
+
+?>
+
+<div class="table-responsive">
+    <table class="table table-sm wt-family-events">
+        <thead>
+            <tr>
+                <th><?= I18N::translate('When') ?></th>
+                <th><?= I18N::translate('Name') ?></th>
+                <th><?= I18N::translate('Relationship') ?></th>
+                <th><?= I18N::translate('Event') ?></th>
+                <th class="text-end"><?= I18N::translate('Years') ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($rows as $row) : ?>
+                <?php $fact = $row['fact']; ?>
+                <?php $record = $fact->record(); ?>
+                <tr<?= $row['days_away'] === 0 ? ' class="table-warning"' : '' ?>>
+                    <td class="text-nowrap">
+                        <?php if ($row['days_away'] === 0) : ?>
+                            <strong><?= I18N::translate('Today') ?></strong>
+                        <?php elseif ($row['days_away'] === 1) : ?>
+                            <?= I18N::translate('Tomorrow') ?>
+                        <?php else : ?>
+                            <?= (new GregorianDate($fact->jd))->format('%D %j %M') ?>
+                        <?php endif ?>
+                    </td>
+                    <td>
+                        <a href="<?= e($record->url()) ?>"><?= $record->fullName() ?></a>
+                        <?php if ($record instanceof Individual) : ?>
+                            <small><?= view('icons/sex', ['sex' => $record->sex()]) ?></small>
+                        <?php endif ?>
+                    </td>
+                    <td><?= e($row['relationship']) ?></td>
+                    <td>
+                        <?= $fact->label() ?>
+                        <div class="small text-muted"><?= $fact->date()->display($record->tree(), null, true) ?></div>
+                    </td>
+                    <td class="text-end"><?= $fact->anniv > 0 ? I18N::number($fact->anniv) : '' ?></td>
+                </tr>
+            <?php endforeach ?>
+        </tbody>
+    </table>
+</div>
