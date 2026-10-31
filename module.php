@@ -275,7 +275,7 @@ return new class extends AbstractModule implements ModuleCustomInterface, Module
         if ($record instanceof Family) {
             $partners = $record->spouses();
 
-            if ($cat['living'] && ($partners->count() < 2 || $partners->contains(static fn (Individual $i): bool => $i->isDead()))) {
+            if ($cat['living'] && ($partners->count() < 2 || $partners->contains(static fn(Individual $i): bool => $i->isDead()))) {
                 return null;
             }
 
@@ -378,7 +378,7 @@ return new class extends AbstractModule implements ModuleCustomInterface, Module
         }
 
         // Step 2: descendants of each ancestor. Closest ancestors first.
-        uasort($ancestors, static fn (array $a, array $b): int => $a[1] <=> $b[1]);
+        uasort($ancestors, static fn(array $a, array $b): int => $a[1] <=> $b[1]);
 
         $best = [];
 
@@ -586,9 +586,10 @@ return new class extends AbstractModule implements ModuleCustomInterface, Module
 
     public function saveBlockConfiguration(ServerRequestInterface $request, int $block_id): void
     {
+        // Note: rules such as isBetween() stick to a Validator object, so use a fresh one for that check.
         $body = Validator::parsedBody($request);
 
-        $this->setBlockSetting($block_id, 'days', (string) $body->isBetween(1, self::MAX_DAYS)->integer('days'));
+        $this->setBlockSetting($block_id, 'days', (string) Validator::parsedBody($request)->isBetween(1, self::MAX_DAYS)->integer('days'));
         $this->setBlockSetting($block_id, 'today', (string) (int) $body->boolean('today', false));
         $this->setBlockSetting($block_id, 'root', $body->string('root', ''));
 
@@ -600,7 +601,7 @@ return new class extends AbstractModule implements ModuleCustomInterface, Module
                 $scope = self::DEFAULTS[$key]['scope'];
             }
 
-            $named = array_filter($body->array($key . '_named'), static fn ($x): bool => is_string($x) && preg_match('/^[A-Za-z0-9:_.-]+$/', $x) === 1);
+            $named = array_filter($body->array($key . '_named'), static fn($x): bool => is_string($x) && preg_match('/^[A-Za-z0-9:_.-]+$/', $x) === 1);
 
             $this->setBlockSetting($block_id, $key . '_scope', $scope);
             $this->setBlockSetting($block_id, $key . '_spouses', (string) (int) $body->boolean($key . '_spouses', false));
